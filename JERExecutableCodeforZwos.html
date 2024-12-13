@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>.jer Compiler (Vigesimal)</title>
+</head>
+<body>
+  <h1>Compile HTML, CSS, JS to Vigesimal .jer</h1>
+  <input type="file" id="htmlInput" accept=".html">
+  <button id="compileBtn">Compile to .jer</button>
+  <textarea id="jerOutput" rows="10" cols="50" placeholder="Generated .jer content will appear here..."></textarea>
+  <br>
+  <button id="executeBtn">Execute .jer File</button>
+
+  <script>
+    // Convert text to vigesimal
+    function convertToVigesimal(str) {
+      return str.split('').map(char => {
+        const unicode = char.charCodeAt(0);
+        return unicode.toString(20);
+      }).join(' ');
+    }
+
+    // Convert vigesimal back to text
+    function convertFromVigesimal(vigesimalStr) {
+      return vigesimalStr.split(' ').map(v => String.fromCharCode(parseInt(v, 20))).join('');
+    }
+
+    // Compiler Logic
+    document.getElementById('compileBtn').addEventListener('click', function() {
+      const fileInput = document.getElementById('htmlInput');
+      const file = fileInput.files[0];
+      if (file && file.name.endsWith('.html')) {
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+          const htmlContent = event.target.result;
+
+          // Extract CSS and JS from the HTML (for simplicity in this example)
+          const cssMatch = htmlContent.match(/<style>(.*?)<\/style>/s);
+          const jsMatch = htmlContent.match(/<script>(.*?)<\/script>/s);
+
+          // Encode each section into vigesimal
+          const htmlVigesimal = convertToVigesimal(htmlContent);
+          const cssVigesimal = cssMatch ? convertToVigesimal(cssMatch[1]) : '';
+          const jsVigesimal = jsMatch ? convertToVigesimal(jsMatch[1]) : '';
+
+          // Prepare the final .jer content
+          const jerFileContent = {
+            html: htmlVigesimal,
+            css: cssVigesimal,
+            js: jsVigesimal
+          };
+
+          // Output the .jer content
+          document.getElementById('jerOutput').value = JSON.stringify(jerFileContent, null, 2);
+        };
+
+        reader.readAsText(file);
+      } else {
+        alert("Please upload a valid .html file.");
+      }
+    });
+
+    // Execute the decoded .jer file
+    document.getElementById('executeBtn').addEventListener('click', function() {
+      const jerFileContent = JSON.parse(document.getElementById('jerOutput').value);
+
+      if (jerFileContent.html && jerFileContent.css && jerFileContent.js) {
+        // Decode HTML, CSS, and JS from vigesimal
+        const decodedHtml = convertFromVigesimal(jerFileContent.html);
+        const decodedCss = convertFromVigesimal(jerFileContent.css);
+        const decodedJs = convertFromVigesimal(jerFileContent.js);
+
+        // Inject the decoded content into the DOM
+        document.documentElement.innerHTML = decodedHtml;
+
+        // Apply the CSS styles
+        const styleTag = document.createElement('style');
+        styleTag.innerHTML = decodedCss;
+        document.head.appendChild(styleTag);
+
+        // Execute the JS code
+        const scriptTag = document.createElement('script');
+        scriptTag.innerHTML = decodedJs;
+        document.body.appendChild(scriptTag);
+      } else {
+        alert("Please compile a valid .jer file first.");
+      }
+    });
+  </script>
+</body>
+</html>
