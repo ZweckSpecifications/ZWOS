@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Jasikaby CPU</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .cpu {
+            text-align: center;
+            border: 2px solid #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 350px;
+        }
+
+        .registers {
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        #output {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 300px;
+            margin-top: 10px;
+        }
+
+        .command-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #f39c12;
+            border: none;
+            border-radius: 5px;
+            color: white;
+        }
+
+        .command-button:hover {
+            background-color: #e67e22;
+        }
+    </style>
+</head>
+<body>
+    <div class="cpu">
+        <h1>Virtual Jasikaby CPU</h1>
+        <div class="registers">
+            <div id="register-acc">Accumulator: 0</div>
+            <div id="register-pc">Program Counter: 0</div>
+            <div id="register-sp">Stack Pointer: 100</div>
+        </div>
+        <button id="startBtn">Start CPU</button>
+        <div class="instructions">
+            <h2>Instructions</h2>
+            <pre id="output">No instructions executed yet.</pre>
+        </div>
+
+        <div class="command-buttons">
+            <button class="command-button" id="runBtn">RUN</button>
+            <button class="command-button" id="stopBtn">STOP</button>
+            <button class="command-button" id="goBtn">GO</button>
+            <button class="command-button" id="bootBtn">BOOT</button>
+            <button class="command-button" id="nukeBtn">NUKE</button>
+            <button class="command-button" id="noBtn">NO</button>
+        </div>
+    </div>
+
+    <script>
+        // Define the Virtual Jasikaby CPU class
+        class Jasikaby_CPU {
+            constructor() {
+                this.accumulator = 0;  // Accumulator register
+                this.pc = 0;           // Program counter
+                this.sp = 100;         // Stack pointer
+                this.isRunning = false;
+                this.instructions = [
+                    { opcode: 'ADD', value: 5 },      // ADD 5 to accumulator
+                    { opcode: 'ADD', value: 10 },     // ADD 10
+                    { opcode: 'SUB', value: 3 },      // SUB 3
+                    { opcode: 'ADD', value: 7 },      // ADD 7
+                    { opcode: 'MUL', value: 2 },      // MUL (Multiply by 2)
+                    { opcode: 'DIV', value: 4 },      // DIV (Divide by 4)
+                    { opcode: 'PUSH', value: 50 },    // PUSH 50 to stack
+                    { opcode: 'POP' },                // POP value from stack
+                ];
+            }
+
+            fetch() {
+                // Fetch the current instruction from the memory (instructions array)
+                const instruction = this.instructions[this.pc];
+                return instruction;
+            }
+
+            decode(instruction) {
+                // Decode the instruction (simplified)
+                return instruction.opcode;
+            }
+
+            execute(instruction) {
+                // Execute the decoded instruction
+                switch (instruction.opcode) {
+                    case 'ADD':
+                        this.accumulator += instruction.value;
+                        break;
+                    case 'SUB':
+                        this.accumulator -= instruction.value;
+                        break;
+                    case 'MUL':
+                        this.accumulator *= instruction.value;
+                        break;
+                    case 'DIV':
+                        if (instruction.value !== 0) {
+                            this.accumulator /= instruction.value;
+                        } else {
+                            this.accumulator = 'Error'; // Handle division by zero
+                        }
+                        break;
+                    case 'PUSH':
+                        this.sp -= 1;
+                        console.log(`Pushed ${instruction.value} to stack at position ${this.sp}`);
+                        break;
+                    case 'POP':
+                        this.sp += 1;
+                        console.log(`Popped value from stack at position ${this.sp}`);
+                        break;
+                    default:
+                        console.log('Unknown opcode');
+                }
+            }
+
+            step() {
+                if (this.isRunning) {
+                    const instruction = this.fetch();
+                    const decoded = this.decode(instruction);
+                    this.execute(decoded);
+                    this.pc++;
+                    this.updateUI();
+                }
+            }
+
+            updateUI() {
+                // Update the UI with the current state of the CPU
+                document.getElementById('register-acc').textContent = `Accumulator: ${this.accumulator}`;
+                document.getElementById('register-pc').textContent = `Program Counter: ${this.pc}`;
+                document.getElementById('register-sp').textContent = `Stack Pointer: ${this.sp}`;
+                document.getElementById('output').textContent = `Executed instructions: ${this.pc}`;
+            }
+
+            run() {
+                this.isRunning = true;
+                console.log("CPU is now RUNNING.");
+            }
+
+            stop() {
+                this.isRunning = false;
+                console.log("CPU is now STOPPED.");
+            }
+
+            go() {
+                this.isRunning = true;
+                console.log("CPU is now in GO mode.");
+            }
+
+            boot() {
+                this.accumulator = 0;
+                this.pc = 0;
+                this.sp = 100;
+                console.log("CPU BOOTED.");
+                this.updateUI();
+            }
+
+            nuke() {
+                this.accumulator = 0;
+                this.pc = 0;
+                this.sp = 100;
+                console.log("NUKE activated! All registers reset.");
+                this.updateUI();
+            }
+
+            no() {
+                console.log("NO command activated. No action taken.");
+            }
+        }
+
+        // Initialize CPU
+        const cpu = new Jasikaby_CPU();
+
+        document.getElementById('startBtn').addEventListener('click', function() {
+            // Start the CPU simulation on button click
+            const interval = setInterval(() => {
+                cpu.step();
+                if (cpu.pc >= cpu.instructions.length) {
+                    clearInterval(interval);
+                    document.getElementById('output').textContent += '\nAll instructions executed.';
+                }
+            }, 1000); // Execute instructions every second
+        });
+
+        // Add event listeners for new commands
+        document.getElementById('runBtn').addEventListener('click', function() {
+            cpu.run();
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', function() {
+            cpu.stop();
+        });
+
+        document.getElementById('goBtn').addEventListener('click', function() {
+            cpu.go();
+        });
+
+        document.getElementById('bootBtn').addEventListener('click', function() {
+            cpu.boot();
+        });
+
+        document.getElementById('nukeBtn').addEventListener('click', function() {
+            cpu.nuke();
+        });
+
+        document.getElementById('noBtn').addEventListener('click', function() {
+            cpu.no();
+        });
+    </script>
+</body>
+</html>
